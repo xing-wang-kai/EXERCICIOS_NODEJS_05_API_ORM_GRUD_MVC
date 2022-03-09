@@ -1,7 +1,8 @@
+'use strict';
+
 module.exports = {
-  up: (queryInterface, Sequelize) => {
-		return queryInterface.bulkInsert('Niveis', [
-			{
+  async up (queryInterface, Sequelize) {
+    await queryInterface.bulkInsert('Niveis', [{
 				descr_nivel: 'básico',
 				createdAt: new Date(),
 				updatedAt: new Date()			
@@ -15,11 +16,15 @@ module.exports = {
 				descr_nivel: 'avançado',
 				createdAt: new Date(),
 				updatedAt: new Date()
-			} 
-	], {})
+			} ], {});
   },
 
-  down: (queryInterface, Sequelize) => {
-		return queryInterface.bulkDelete('Niveis', null, {})
+  async down (queryInterface, Sequelize) {
+    /**
+     * Add commands to revert seed here.
+     *
+     * Example:
+     * await queryInterface.bulkDelete('People', null, {});
+     */
   }
-}
+};
