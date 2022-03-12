@@ -57,6 +57,18 @@ class PessoasController{
             return res.status(400).json(error.message)
         }
     }
+    static async Restaurar(req, res){
+        const { id } = req.params;
+        try{
+            await database.Pessoas.restore({where: {id: Number.parseInt(id)}})
+            return res.status(200).json({mensagem: `código ${ id } restaurado com sucesso!`})
+
+        }catch(error){
+            res.status(500).json(error.message)
+        }
+    }
+
+    ///REFERECIAS DE MATRICULAS
     //find all from matriculas
     static async FindByIDMatricula(req, res){
         const { estudanteId, matriculaId } = req.params;
@@ -110,6 +122,17 @@ class PessoasController{
             return res.status(400).json(error.message)
         }
     }
+    static async RestaurarMatriculas(req, res){
+        const { estudanteId, matriculaId } = req.params;
+        try{
+            await database.Matriculas.restore({where: {id: Number.parseInt(matriculaId)}})
+            return res.status(200).json({mensagem: `código ${ matriculaId } restaurado com sucesso!`})
+
+        }catch(error){
+            res.status(500).json(error.message)
+        }
+    }
+    
 }
 
 module.exports = PessoasController;

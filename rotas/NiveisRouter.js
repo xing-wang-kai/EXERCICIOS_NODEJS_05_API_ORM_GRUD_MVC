@@ -8,5 +8,6 @@ router.get("/niveis/:id", Controller.FindByIDNiveis);
 router.patch("/niveis/:id", Controller.UpdateTableNiveis);
 router.post("/niveis", Controller.CreateValueNiveis);
 router.delete("/niveis/:id", Controller.DeleteNiveis);
+router.post('/niveis/:id/restaurar', Controller.Restaurar)
 
 module.exports = router;

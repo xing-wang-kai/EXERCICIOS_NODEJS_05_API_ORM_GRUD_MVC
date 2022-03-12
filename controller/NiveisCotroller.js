@@ -57,6 +57,17 @@ class NiveisController{
             return res.status(400).json(error.message)
         }
     }
+    //this method retoure one data
+    static async Restaurar(req, res){
+        const { id } = req.params;
+        try{
+            const value = database.Niveis.restore({where: {id: Number.parseInt(id)}})
+            return res.status(200).json({mensagem: `código ${ id } restaurado com sucesso!`})
+
+        }catch(error){
+            res.status(500).json(error.message)
+        }
+    }
 }
 
 module.exports = NiveisController;
