@@ -10,7 +10,11 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      Pessoas.hasMany(models.Matriculas, {foreignKey: "estudante_id"});
+      Pessoas.hasMany(models.Matriculas, {
+        foreignKey: "estudante_id",
+        scope: {status: 'confirmado'},
+        as: 'AulasMatriculadas'});
+
       Pessoas.hasMany(models.Turmas, {foreignKey: "docentes_id"});
     }
   }
@@ -32,7 +36,10 @@ module.exports = (sequelize, DataTypes) => {
     modelName: 'Pessoas',
     paranoid: true,
     defaultScope: {where: { ativo : true } },
-    Scopes:{ todos:{where: { } } }
+    scopes:{ 
+      todos:{
+        where: {  } 
+      } }
   });
   return Pessoas;
 };

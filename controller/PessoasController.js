@@ -1,8 +1,20 @@
 const database = require("../models");
+const Sequelize = require('sequelize');
+const op = Sequelize.op;
 
 class PessoasController{
     //this method find all values
     static async FindAll(req, res){
+        try{
+            const Values = await database.Pessoas.scope('todos').findAll();
+            return res.status(200).json(Values);
+
+        }
+        catch(error){
+            res.status(400).json(error.message)
+        }
+    }
+    static async FindAllAtived(req, res){
         try{
             const Values = await database.Pessoas.findAll();
             return res.status(200).json(Values);
@@ -18,6 +30,19 @@ class PessoasController{
         try{
             const Values = await database.Pessoas.findOne({where: { id: Number.parseInt(id)}});
             return res.status(200).json(Values);
+        }
+        catch(error){
+            return res.status(400).json(error.message)
+        }
+    }
+
+    //this method find values by id
+    static async findOneMatriculasConfirmadas(req, res){
+        const { id } = req.params;
+        try{
+            const Values = await database.Pessoas.findOne({where: { id: Number.parseInt(id)}});
+            const matriculas = await Values.getAulasMatriculadas();
+            return res.status(200).json(matriculas);
         }
         catch(error){
             return res.status(400).json(error.message)
