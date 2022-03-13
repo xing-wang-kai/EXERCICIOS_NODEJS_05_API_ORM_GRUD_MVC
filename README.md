@@ -16,11 +16,11 @@ e o sistema está funcionando.
 (x)- Para deixar a interface mais limpa, o cliente gostaria que na lista de Pessoas, por padrão, fossem exibidos 
 somente os usuários ativos.
 
-()- Foram percebidas algumas falhas de validação dos formulários por parte do front-end, o que resultou em dados
+(x)- Foram percebidas algumas falhas de validação dos formulários por parte do front-end, o que resultou em dados
  de email inválidos no banco. 
 É desejável que essa validação não seja responsabilidade exclusiva do front.
 
-()- É importante poder consultar todas as matrículas confirmadas referentes a estudante X de forma rápida.
+(x)- É importante poder consultar todas as matrículas confirmadas referentes a estudante X de forma rápida.
 
 ()- O cliente gostaria de poder consultar as turmas abertas por intervalo de data, para não receber informações
  desnecessárias (como turmas antigas).
@@ -40,6 +40,7 @@ Durante o projeto vamos analisar esta lista e transformar esses requisitos em no
     - Para começar vamos impedir que o usuário destrua realmente os dados ao deleter, usando o method Soft delete do sql,
     na documentação do Sequelize encontra-se como adicionar este method ao nosso código. 
     -Primeiro vá até a pasta models e para cada arquivo das Table no final do código adicionar como o exemplo
+    -Estes dados são inseridos em Modelos;
 
     +-----------------------------------------------+
     |    Turmas.init({
@@ -65,6 +66,7 @@ Durante o projeto vamos analisar esta lista e transformar esses requisitos em no
 
     o codigo ficará assim:
 
+    -Este dados devem ser criados em migration
         +---------------------------------------------------------------------+
         |    'use strict';                                                    |
         |        module.exports = {                                           |
@@ -91,8 +93,157 @@ Durante o projeto vamos analisar esta lista e transformar esses requisitos em no
 
 ------------------------------------------------------------------------------------------------------------------------------
 ##Escopo de modelo e validações
+    existe um method que pode ser usado para construir Defaultscope com este method o filtro findAll recebe um 
+    parametro de busca e sempre procura buscas correspondentes, como no exemplo.
 
+    -Este dados são inseridos em modelos
+
+    +----------------------------------------------------------------
+    |            {
+    |            sequelize,
+    |            modelName: 'Pessoas',
+    |            paranoid: true,
+    |            defaultScope: {where: { ativo : true } },
+    |            scopes:{ 
+    |            todos:{
+    |                where: {  } 
+    |            } }
+    |        });
+    |        return Pessoas;
+    |        };
+    |
+    +-----------------------------------------------------------------
+
+    neste caso também adicionei o filtro scopes que define novos parametros de buscas
+    que podem ser passados na pesquisa findAll como regra automática, no caso aciam 
+    apago todos filtros para que todos dados seja buscado, para invocar este parametro em 
+    findAll precisamos.
+   - os dados são inseridos em controller
+
+    +-----------------------------------------------------------------
+    |        static async FindAll(req, res){
+    |            try{
+    |                const Values = await database.Pessoas.scope('todos').findAll();
+    |                return res.status(200).json(Values);
+    |
+    |            }
+    |            catch(error){
+    |                res.status(400).json(error.message)
+    |            }
+    |        }
+    +------------------------------------------------------------------
+
+    É possivel definir também validação no código,como exemplo do campo e-mail, o ORM traz
+    alguams técnicas para validar os dados no backend como.:
+
+    os comandos devem ser adicionados em modelos:
+
+    +-----------------------------------------------------------------
+    |            Pessoas.init({
+    |            nome: DataTypes.STRING,
+    |            ativo: DataTypes.BOOLEAN,
+    |            email: {
+    |            type: DataTypes.STRING,
+    |            validate: {
+    |                isEmail:{
+    |                args: true,
+    |                msg: 'dados do tipo e-mail inválidos'
+    |                }
+    |            }
+    |            },
+    |
+    +-------------------------------------------------------------------------
+
+    Na documentação do SQL existe diversos tipos de lista para validações.
 
 ##Escopo de associação e operadores 
+
+    - podemos também declarar methods especiais para pesquisas diretamente no dentro da foregnkey como no exemplo 
+    abaixo.:
+
+    este código é adicionado em modelos.
+        +-------------------------------------------------------------------
+        |    static associate(models) {
+        |    Pessoas.hasMany(models.Matriculas, {
+        |        foreignKey: "estudante_id",
+        |        scope: {status: 'confirmado'},
+        |        as: 'AulasMatriculadas'});
+        |
+        |    Pessoas.hasMany(models.Turmas, {foreignKey: "docentes_id"});
+        |    }
+        +--------------------------------------------------------------------
+
+    - Este tipo de declaração é usada dentro do method envocado neste caso o controller.
+
+
+    +=--------------------------------------------------------------------------
+    |        static async findOneMatriculasConfirmadas(req, res){
+    |            const { id } = req.params;
+    |            try{
+    |                const Values = await database.Pessoas.findOne({where: { id: Number.parseInt(id)}});
+    |                const matriculas = await Values.getAulasMatriculadas();
+    |                return res.status(200).json(matriculas);
+    |            }
+    |            catch(error){
+    |                return res.status(400).json(error.message)
+    |            }
+    |        }
+    +------------------------------------------------------------------------------
+
+    -Neste caso também podemos fazer validações pelo escopo chamando alguns argumentos. ex.:
+
+    este codigo colocamos em controller.
+    
+    +----------------------------------------------------------------------------
+    |       const Sequelize = require('sequelize')
+    |       const Op = Sequelize.Op 
+    |
+    |        static async FindBydata(req, res){
+    |            const { data_begin, data_end } = req.query;
+    |            const where = {}
+    |            data_begin || data_end ? where.data_inicio = {}: null;
+    |            data_begin ? where.data_inicio[Op.gte] = data_begin: null;
+    |            data_end ? where.data_inicio[Op.lte] = data_end: null;
+    |            try{
+    |                const Values = await database.Turmas.findAll({where});
+    |                return res.status(200).json(Values);
+    |            }
+    |            catch(error){
+    |                return res.status(400).json(error.message)
+    |            }
+    |        }
+    +------------------------------------------------------------------------------
+
+    para envocar o chamado basta turmas?data_begin=2020-01-12&data_end=2020-01-12
+
+    fará uma pesquisa entre data informada.
+
+    - A proxima solicitação o cliente quer consultar a matricula por turmas.: podemos usar o 
+    method findAndCountAll() este method encontra todos valores informados e retorna um count dos
+    valores;
+
+    +--------------------------------------------------------------------------------+
+    |    static async FindbyIdTurmas(req, res){
+    |        const { id } = req.params;
+    |        try{
+    |            const Values = await database.Matriculas.findAndCountAll({where: { 
+    |                turmas_id: Number.parseInt(id),
+    |                status: "confirmado",
+    |                },
+    |                limit: 20,
+    |                order: [['estudante_id', 'ASC']]
+    |            });
+    |            return res.status(200).json(Values);
+    |        }
+    |        catch(error){
+    |            return res.status(400).json(error.message)
+    |        }
+    |    }
+    +----------------------------------------------------------------------------------+
+    Neste caso podemos passar mais parametros de busca como limit: 20, busca até 20 valores ou 
+    methods como order: [['valor coluna', 'tipo ASC ou DESC']]
+
+    
+
 ##Transações 
 ##Refatoração com serviços 

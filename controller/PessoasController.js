@@ -36,6 +36,24 @@ class PessoasController{
         }
     }
 
+     //this method find values by id
+     static async FindbyIdTurmas(req, res){
+        const { id } = req.params;
+        try{
+            const Values = await database.Matriculas.findAndCountAll({where: { 
+                turmas_id: Number.parseInt(id),
+                status: "confirmado",
+                },
+                limit: 20,
+                order: [['estudante_id', 'ASC']]
+            });
+            return res.status(200).json(Values);
+        }
+        catch(error){
+            return res.status(400).json(error.message)
+        }
+    }
+
     //this method find values by id
     static async findOneMatriculasConfirmadas(req, res){
         const { id } = req.params;

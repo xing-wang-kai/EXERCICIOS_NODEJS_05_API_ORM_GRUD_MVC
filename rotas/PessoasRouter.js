@@ -1,5 +1,5 @@
 const { Router } = require('express');
-const { FindByIDMatricula } = require('../controller/PessoasController.js');
+const { FindByIDMatricula, FindbyIdTurmas } = require('../controller/PessoasController.js');
 const Controller = require('../controller/PessoasController.js');
 
 const router = Router()
@@ -15,6 +15,7 @@ router.post('/atendimentos/:id/restaurar', Controller.Restaurar)
 
 
 router.get("/atendimentos/:estudanteId/matriculas/:matriculaId", FindByIDMatricula);
+router.get('/atendimentos/matriculas/:id/confirmados', FindbyIdTurmas);
 router.post("/atendimentos/:id/matriculas", Controller.CreateValueMatricula);
 router.patch('/atendimentos/:estudanteId/matriculas/:matriculaId', Controller.UpdateTableMatricula);
 router.delete('/atendimentos/:estudanteId/matriculas/:matriculaId', Controller.DeleteMatriculas)

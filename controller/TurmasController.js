@@ -1,5 +1,6 @@
 const database = require("../models");
-
+const Sequelize = require('sequelize')
+const Op = Sequelize.Op
 class TurmasController{
     //this method find all values
     static async FindAllTurmas(req, res){
@@ -12,11 +13,27 @@ class TurmasController{
             res.status(400).json(error.message)
         }
     }
+    
     //this method find values by id
     static async FindByIDTurmas(req, res){
         const { id } = req.params;
         try{
             const Values = await database.Turmas.findOne({where: { id: Number.parseInt(id)}});
+            return res.status(200).json(Values);
+        }
+        catch(error){
+            return res.status(400).json(error.message)
+        }
+    }
+    //this filtre find all data using arguments
+    static async FindBydata(req, res){
+        const { data_begin, data_end } = req.query;
+        const where = {}
+        data_begin || data_end ? where.data_inicio = {}: null;
+        data_begin ? where.data_inicio[Op.gte] = data_begin: null;
+        data_end ? where.data_inicio[Op.lte] = data_end: null;
+        try{
+            const Values = await database.Turmas.findAll({where});
             return res.status(200).json(Values);
         }
         catch(error){
