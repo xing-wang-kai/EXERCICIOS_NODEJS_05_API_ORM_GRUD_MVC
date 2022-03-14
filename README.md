@@ -22,10 +22,10 @@ somente os usuários ativos.
 
 (x)- É importante poder consultar todas as matrículas confirmadas referentes a estudante X de forma rápida.
 
-()- O cliente gostaria de poder consultar as turmas abertas por intervalo de data, para não receber informações
+(x)- O cliente gostaria de poder consultar as turmas abertas por intervalo de data, para não receber informações
  desnecessárias (como turmas antigas).
 
-()- O cliente quer poder consultar as matrículas por turma e saber quais delas estão lotadas, para organizar 
+(x)- O cliente quer poder consultar as matrículas por turma e saber quais delas estão lotadas, para organizar 
 melhor as matrículas.
 
 ()- O cliente gostaria que, uma vez que o cadastro de um estudante fosse desativado, todas as matrículas 
@@ -223,27 +223,51 @@ Durante o projeto vamos analisar esta lista e transformar esses requisitos em no
     valores;
 
     +--------------------------------------------------------------------------------+
-    |    static async FindbyIdTurmas(req, res){
-    |        const { id } = req.params;
-    |        try{
-    |            const Values = await database.Matriculas.findAndCountAll({where: { 
-    |                turmas_id: Number.parseInt(id),
-    |                status: "confirmado",
-    |                },
-    |                limit: 20,
-    |                order: [['estudante_id', 'ASC']]
-    |            });
-    |            return res.status(200).json(Values);
-    |        }
-    |        catch(error){
-    |            return res.status(400).json(error.message)
-    |        }
-    |    }
-    +----------------------------------------------------------------------------------+
+    |    static async FindbyIdTurmas(req, res){                                      |
+    |        const { id } = req.params;                                              |
+    |        try{                                                                    |
+    |            const Values = await database.Matriculas.findAndCountAll(           |
+    |                {where: {                                                       |
+    |                turmas_id: Number.parseInt(id),                                 |
+    |                status: "confirmado",                                           |
+    |                },                                                              |
+    |                limit: 20,                                                      |
+    |                order: [['estudante_id', 'ASC']]                                |
+    |            });                                                                 |
+    |            return res.status(200).json(Values);                                |
+    |        }                                                                       |
+    |        catch(error){                                                           |
+    |            return res.status(400).json(error.message)                          |
+    |        }                                                                       |
+    |    }                                                                           |
+    +--------------------------------------------------------------------------------+
+
+    - alguns atributos podem ser adicionados a busca para agrupar determinados valores
+    tais como os exemplos abaixo;
+
+            attribute: ['matricula_id']
+            group: ['matricula_id']
+            having: Sequelize.literal( 'count(matricula_id) >= 2' )
+
+    -Siquelie.literal permite que seja escritos comandos do SQL no sequelize para executar
+    algumas tarefas.
+
+
     Neste caso podemos passar mais parametros de busca como limit: 20, busca até 20 valores ou 
     methods como order: [['valor coluna', 'tipo ASC ou DESC']]
 
-    
+
 
 ##Transações 
+
+    - Cancelando todas matriculas dos estudantes e passando status ativo para false e cancelado em matricula.
+
+    - method transation faz um callback na transação e retorna se tudo ocorreu como esperado.
+
+     database.Sequelize.Transation(async transaction =>{
+        await database.pessoas.update(valores, {where :{}}, {transaction: transaction})
+
+    })
+
+
 ##Refatoração com serviços 
