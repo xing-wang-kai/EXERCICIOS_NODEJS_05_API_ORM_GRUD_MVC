@@ -28,7 +28,7 @@ somente os usuários ativos.
 (x)- O cliente quer poder consultar as matrículas por turma e saber quais delas estão lotadas, para organizar 
 melhor as matrículas.
 
-()- O cliente gostaria que, uma vez que o cadastro de um estudante fosse desativado, todas as matrículas 
+(x)- O cliente gostaria que, uma vez que o cadastro de um estudante fosse desativado, todas as matrículas 
 relativas a este estudante 
 automaticamente passassem a constar como “canceladas”.
 
@@ -259,10 +259,15 @@ Durante o projeto vamos analisar esta lista e transformar esses requisitos em no
 
 
 ##Transações 
+    Conforme a ultima regra de negócio onde todas matriculas deveriam desativar caso os status dos estudantes 
+    tenham sido desativos, então foi necessário realizar um único caminho com o method UPDATE uma vez para estudante
+    parasando os status para false e para matricula passando o status para cancelado, e entao usando o ID para buscar
+    em Pessoas o id e em Matricula a foregnkey estudante_id;
 
     - Cancelando todas matriculas dos estudantes e passando status ativo para false e cancelado em matricula.
 
-    - method transation faz um callback na transação e retorna se tudo ocorreu como esperado.
+    - method transation faz um callback na transação e retorna se tudo ocorreu como esperado. Este method protege
+    nossos dados ue sejam alterados parcialmente, ou todos dados são alterados ou se não ocorrer então retorna a mensagem.
 
      database.Sequelize.Transation(async transaction =>{
         await database.pessoas.update(valores, {where :{}}, {transaction: transaction})
@@ -271,3 +276,9 @@ Durante o projeto vamos analisar esta lista e transformar esses requisitos em no
 
 
 ##Refatoração com serviços 
+
+    - Para refatorar o código e deixar ele mais simpes, podemos ultilizar os serviços.
+    Criando uma pasta chamada serviços no projeto e então instanciando uma nova class chamadas
+    Servicos e adicionar os methods comuns entre nossas tabelas para os controladores.
+
+    

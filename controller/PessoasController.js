@@ -1,12 +1,14 @@
 const database = require("../models");
 const Sequelize = require('sequelize');
-const op = Sequelize.op;
+
+const { PessoasServicos } = require('../servicos');
+const pessoasServicos = new PessoasServicos();
 
 class PessoasController{
     //this method find all values
-    static async FindAll(req, res){
+    static async FindAllAtived(req, res){
         try{
-            const Values = await database.Pessoas.scope('todos').findAll();
+            const Values = await pessoasServicos.buscarRegisAtivos();
             return res.status(200).json(Values);
 
         }
@@ -14,9 +16,10 @@ class PessoasController{
             res.status(400).json(error.message)
         }
     }
-    static async FindAllAtived(req, res){
+
+    static async FindAll(req, res){
         try{
-            const Values = await database.Pessoas.findAll();
+            const Values = await pessoasServicos.BuscarTodosRegistros();
             return res.status(200).json(Values);
 
         }
@@ -126,6 +129,24 @@ class PessoasController{
             return res.status(400).json(error.message)
         }
     }
+
+    //find all from turmas where status: confirmado
+    static async FindByIDTurma(req, res){
+        const { id } = req.params;
+        try{
+            const Values = await database.Matriculas.findAndCountAll({where: { 
+                turmas_id: Number.parseInt(id), 
+                status: "confirmado",
+                },
+                limit: 3,
+                orde: [['estudante_id', 'ASC']]
+            });
+            return res.status(200).json(Values);
+        }
+        catch(error){
+            return res.status(400).json(error.message)
+        }
+    }
     //create a new from matriculas
     static async CreateValueMatricula(req, res){
         const { id } = req.params
@@ -168,12 +189,27 @@ class PessoasController{
     static async RestaurarMatriculas(req, res){
         const { estudanteId, matriculaId } = req.params;
         try{
+            
             await database.Matriculas.restore({where: {id: Number.parseInt(matriculaId)}})
             return res.status(200).json({mensagem: `código ${ matriculaId } restaurado com sucesso!`})
 
         }catch(error){
             res.status(500).json(error.message)
         }
+    }
+    static async destivaPessoasEMatriculas(req, res){
+        const { id } = req.params;
+        try{
+            database.sequelize.transaction(async (t)=>{
+                await database.Pessoas.update({ativo: false}, {where: {id: Number.parseInt(id)}}, {transaction: t});
+                await database.Matriculas.update({status: 'cancelado'}, {where: {estudante_id: Number.parseInt(id)}}, {transaction: t})
+                res.status(200).json({mensagem: `O Estudante de número ${id} teve sua matricula e status cancelados com sucesso`})
+            })
+            
+        }catch(error){
+            res.status(400).json(error.message)
+        }
+        
     }
     
 }
